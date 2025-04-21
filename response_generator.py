@@ -114,3 +114,49 @@ def generate_response(prompt):
         # "colab code"
 
         return f"Working on ESG analysis..."
+    
+def generate_response(prompt):
+    pdf_data = st.session_state.get("pdf_text", [])
+
+    if not pdf_data:
+        return "❗Please upload a PDF file before using the chatbot."
+
+    prompt = prompt.strip().lower()
+
+    if prompt == "show content":
+        preview = "\n\n".join([f"[Page {p['page']}]: {p['content'][:300]}..." for p in pdf_data])
+        return f"📄 Here's a preview of the uploaded PDF:\n\n{preview}"
+
+    elif prompt == "clustering analysis":
+        return "🔍 Working on clustering analysis..."
+
+    elif prompt == "esg analysis":
+        return "🌱 Working on ESG analysis..."
+
+    elif prompt.startswith("goto section") or prompt.startswith("navigate to"):
+        keyword = prompt.replace("goto section", "").replace("navigate to", "").strip()
+        if not keyword:
+            return "⚠️ Please provide a section keyword. Example: `goto section 永續治理`"
+
+        results = []
+        for page in pdf_data:
+            page_num = page["page"]
+            content = page["content"]
+            if keyword.lower() in content[:400].lower():  # 限定前幾百字內找章節名
+                snippet = content[:200] + ("..." if len(content) > 200 else "")
+                results.append(f"[Page {page_num}]:\n{snippet}\n")
+
+        if results:
+            return "Matched section results:\n\n" + "\n".join(results[:10])  # 最多顯示 10 筆
+        else:
+            return f"No section found with keyword: '{keyword}'"
+
+    return (
+        "📝 It looks like your prompt might not match the expected operations.\n\n"
+        "💡 Try one of the following:\n"
+        "- Show content\n"
+        "- Clustering analysis\n"
+        "- ESG analysis\n\n"
+        "- goto section {主題名稱}（e.g. navigate to 氣候變遷）\n"
+        "- navigate to {主題名稱}"
+    )
