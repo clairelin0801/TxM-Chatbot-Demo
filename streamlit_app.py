@@ -3,6 +3,7 @@ from openai import OpenAI
 import time
 import requests
 from db_utils import init_db, get_user_profile, save_user_profile
+from qa_utils.Word2Vec import SKIPGRAM, View2D, View3D, CBOW, CompareSkipgramCBOW
 from ui_utils import *
 from pdf_context import *
 from response_generator import generate_response
@@ -53,6 +54,7 @@ def main():
     user_image = st.session_state["user_image"]
     st.title(f"💬 {user_name}'s Chatbot")
 
+    # Left side bar
     with st.sidebar:
         st_c_1 = st.container(border=True)
         with st_c_1:
@@ -70,6 +72,16 @@ def main():
                     st.image("https://www.w3schools.com/howto/img_avatar.png")
             else:
                 st.image("https://www.w3schools.com/howto/img_avatar.png")
+
+        # === Task Selection ===
+        task = st.sidebar.radio("Choose a Function:", [
+            "General Chatbot 🤖",
+            "2D View",
+            "3D View",
+            "SKIP-GRAM",
+            "CBOW",
+            "Compare Skip-gram vs CBOW"
+        ])
 
         st.markdown("---")
         # st.write("🌐 Language")
@@ -128,9 +140,34 @@ def main():
         st.session_state.messages.append({"role": "assistant", "content": response})
         st_c_chat.chat_message("assistant").write_stream(stream_data(response))
 
+    st.markdown("---")
+    if task == "General Chatbot 🤖":
+        # 只顯示聊天，不顯示 sentence 輸入
+        if prompt := st.chat_input(placeholder=placeholderstr, key="chat_bot"):
+            chat(prompt)
 
-    if prompt := st.chat_input(placeholder=placeholderstr, key="chat_bot"):
-        chat(prompt)
+    else:   
+        # 🧠 User input for sentence list
+        st.subheader("📥 Enter sentences (one per line)")
+        user_input_text = st.text_area("Paste your sentences below:", height=200)
+        user_sentences = [s.strip() for s in user_input_text.split('\n') if s.strip()]
+
+        # 🧭 Routing logic
+        if user_sentences:
+            if task == "2D View":
+                fig, model = View2D.plot_word2vec_2d(user_sentences)
+
+            elif task == "3D View":
+                fig, model = View3D.plot_word2vec_3d(user_sentences)
+
+            elif task == "SKIP-GRAM":
+                fig, model = SKIPGRAM.plot_skipgram_word2vec(user_sentences)
+
+            elif task == "CBOW":
+                fig, model = CBOW.plot_cbow_word2vec(user_sentences)
+            
+            elif task == "Compare Skip-gram vs CBOW":
+                fig, model = CompareSkipgramCBOW.compare_skipgram_cbow(user_sentences)
 
 if __name__ == "__main__":
     main()
