@@ -33,3 +33,5 @@ A simple Streamlit app that shows how to build a chatbot using OpenAI's GPT-3.5.
    ```
    
    * Note: Ctrl + C to stop the app
+  
+Deployed: https://txm-chatbot-demo-claire.streamlit.app/
